@@ -1,5 +1,29 @@
 {% extends "network/layout.html" %}
+{% load static %}
 
 {% block body %}
-    TODO
+<div id="compose-post">
+    <button id="showposts">Back to Posts</button>
+<form id="post-form">
+    
+    <textarea id="text-content" type="textarea" placeholder="What's new?"></textarea>
+    <input id="submit-post" type="submit" value="Post" style="font-size: 25px;">
+</form>
+</div>
+
+<div id="posts">
+    Posts here!
+</div>
 {% endblock %}
+
+
+{% block script %}
+    <script>
+        var likebuttonimg  = "{% static 'network/likebutton.png' %}";
+        var haventlikedbuttonimg  = "{% static 'network/haventlikedbutton.png' %}";
+    
+    </script>
+    <script src="{% static 'network/logic.js' %}">
+    </script>
+{% endblock script %}
+

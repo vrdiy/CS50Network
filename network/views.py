@@ -1,15 +1,67 @@
+import json
+from telnetlib import STATUS
+from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.forms import ModelForm
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import User
+from .models import User, Post
+
 
 
 def index(request):
-    return render(request, "network/index.html")
+    return render(request, "network/index.html", {
+        
+    })
 
+@csrf_exempt
+@login_required(login_url='login')
+def likepost(request,postid):
+    print("GOT TO LIKE POST")
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required."}, status=400)
+
+    posttocheck = Post.objects.get(id=postid)
+    
+    for liker in posttocheck.likes.all():
+        if liker == request.user:
+            return JsonResponse({"message": "You've already liked this post"}, status=400)
+    posttocheck.likes.add(request.user)
+    posttocheck.save()
+    return JsonResponse({"message": "Post Liked."}, status=201)
+
+
+@csrf_exempt
+@login_required(login_url='login')
+def newpost(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required."}, status=400)
+
+    data = json.loads(request.body)
+    postcontent = data.get("textcontent", "")
+
+    post = Post(user=request.user,textcontent=postcontent)
+    post.save()
+    return JsonResponse({"message": "Post uploaded successfully."}, status=201)
+
+def getposts(request):
+    posts = Post.objects.all()
+    posts = posts.order_by("-timestamp").all()
+    serializedposts = []
+    for post in posts:
+        initial = post.serialize()
+        initial["userhasliked"] = False
+        for liker in post.likes.all():
+            if liker == request.user:
+                initial["userhasliked"] = True
+        serializedposts.append(initial)
+    print(serializedposts)
+    return JsonResponse(serializedposts,safe=False, status =201)
 
 def login_view(request):
     if request.method == "POST":
