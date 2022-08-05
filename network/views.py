@@ -30,10 +30,12 @@ def likepost(request,postid):
     
     for liker in posttocheck.likes.all():
         if liker == request.user:
-            return JsonResponse({"message": "You've already liked this post"}, status=400)
+            posttocheck.likes.remove(request.user)
+            posttocheck.save()
+            return JsonResponse({"message": "You've unliked this post", "likestatus": "0"}, status=201)
     posttocheck.likes.add(request.user)
     posttocheck.save()
-    return JsonResponse({"message": "Post Liked."}, status=201)
+    return JsonResponse({"message": "Post Liked.", "likestatus": "1"}, status=201)
 
 
 @csrf_exempt

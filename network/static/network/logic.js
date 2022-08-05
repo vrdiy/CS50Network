@@ -29,7 +29,16 @@ function like_post(id){
   
     .then(response => response.json())
     .then(result => {
-        console.log(result);
+        if(result.likestatus === '1'){
+        document.querySelector(`#post-${id}`).src = likebuttonimg;
+        document.querySelector(`#post-${id}-likes`).innerHTML = parseInt(document.querySelector(`#post-${id}-likes`).innerHTML)+1;
+        
+        }
+        else if(result.likestatus === '0'){
+            document.querySelector(`#post-${id}`).src = haventlikedbuttonimg;
+            document.querySelector(`#post-${id}-likes`).innerHTML = parseInt(document.querySelector(`#post-${id}-likes`).innerHTML)-1;
+        }
+        console.log(result.message)
     })
     
 }
@@ -68,11 +77,12 @@ function show_posts(){
             textcontent.className = "postinnercontent";
 
             const meta = document.createElement('p');
-            meta.innerHTML = `Posted by ${element.user},\n${counter} likes\n${element.timestamp}\n`;
+            meta.innerHTML = `Posted by ${element.user},\n<span id="post-${element.id}-likes">${counter}</span> likes\n${element.timestamp}\n`;
             meta.style.borderBottom = '1px solid grey';
 
             //likebutton
             const likebutton = document.createElement('input');
+            likebutton.setAttribute("id",`post-${element.id}`);
             likebutton.addEventListener('click',() => like_post(element.id));
             likebutton.type = "image";
             
