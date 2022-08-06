@@ -19,10 +19,33 @@ def index(request):
         
     })
 
+def load_profile(request,id):
+
+    profile = User.objects.get(id=id)
+    posts = profile.posts
+    posts = posts.order_by("-timestamp").all()
+    serializedposts = []
+    for post in posts:
+        initial = post.serialize()
+        initial["userhasliked"] = False
+        for liker in post.likes.all():
+            if liker == request.user:
+                initial["userhasliked"] = True
+
+        serializedposts.append(initial)
+    userinfo = {"username": profile.username, "followers": profile.follower_count(),"following": profile.following_count()}
+    serializedposts.append(userinfo)
+    print(serializedposts)
+    return JsonResponse(serializedposts,safe=False, status =201)
+    pass
+
+
+
 @csrf_exempt
 @login_required(login_url='login')
 def likepost(request,postid):
     print("GOT TO LIKE POST")
+    print(f"post id to like: {postid}")
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
 
