@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
  
-
-document.querySelector('#compose-post').onsubmit = try_post;
+    console.log("loaded...");
+    document.querySelector('#compose-post').onsubmit = try_post;
     //document.querySelector('#newpost').addEventListener('click', compose_post);
     document.querySelector('#showposts').addEventListener('click', show_posts);
-
+    console.log("going to show posts");
     show_posts();
 });
 
@@ -53,83 +53,17 @@ function like_post(id){
 }
 function load_profile(userid){
     fetch(`/profile/${userid}`)
-    .then(response => response.json())
     .then(result => {
+        return result;
+    })
         
-        const postsdiv = document.querySelector('#posts');
-        const info = document.createElement('p');
-        info.className = "banner";
-        info.innerHTML =  `${result[result.length -1]["username"]}'s Profile \n Followers: ${result[result.length -1]["followers"]} \n Following: ${result[result.length -1]["following"]}`;
-        document.querySelector('#posts').innerHTML = '';
-        postsdiv.append(info);
-        
-        //console.log(result[result.length -1]["followers"]);
         
 
-        //Show posts
-        for(let i = 0; i< result.length-1;i++){
-            element = result[i];
-            if(element.id){
-            counter = 0;
-            for(let like in element.likes){
-                counter++;
-            }
-            const singlePost = document.createElement('div');
-            singlePost.className = "post";
-
-            const textcontent = document.createElement('p');
-            textcontent.innerHTML = `${element.textcontent}`;
-            textcontent.className = "postinnercontent";
-            
-            //not valuable for this view but consistent with the other pages
-            const namelink = document.createElement('strong');
-            namelink.innerHTML = `${element.user}`;
-            namelink.setAttribute("id",`nameButton-${element.id}`);
-            namelink.addEventListener('click', () => load_profile(element.userid));
-
-            const meta = document.createElement('p');
-            meta.append("Posted by ");
-            meta.innerHTML += `\n<span id="post-${element.id}-likes">${counter}</span> likes\n${element.timestamp}\n`;
-            meta.style.borderBottom = '1px solid grey';
-            
-            const likebutton = document.createElement('input');
-            likebutton.setAttribute("id",`post-${element.id}`);
-            
-            //need to scope this event listener because for some reason when triggered, element.id is like a global variable when it (in my mind) should/would be a copy
-            //it also works to declare a local variable and then pass that in aswell:
-            //const localvar = element.id
-            //likebutton.addEventListener('click',() => like_post(localvar));
-            (function(elementid){
-            likebutton.addEventListener('click',() => like_post(elementid))})(element.id);
-            likebutton.type = "image";
-            
-            if(element.userhasliked){
-                likebutton.src = likebuttonimg;
-            }
-            else{
-                likebutton.src = haventlikedbuttonimg;
-            }
-
-            singlePost.append(meta);
-            singlePost.append(textcontent);
-            singlePost.append(likebutton);
-            singlePost.append(namelink)
-
-            
-            postsdiv.append(singlePost);
-            //tmplikebutton = postsdiv.querySelector(`#post-${element.id}`);
-            //const pid = element.id;
-            //tmplikebutton.addEventListener('click',() => like_post(pid));
-
-        }
-        }
-        
-})
 console.log("tried");
 }
 
 
-function show_posts(){
+function show_posts(userid=0){
 
     document.querySelector('#compose-post').style.display = 'none';
     document.querySelector('#posts').style.display = 'block';
@@ -143,7 +77,7 @@ function show_posts(){
 
     document.querySelector('#text-content').value = '';
 
-    fetch('/getposts')
+    fetch(`/getposts/${userid}`)
     .then(response => response.json())
     .then(posts => {
         console.log(posts);
@@ -155,6 +89,7 @@ function show_posts(){
             for(let like in element.likes){
                 counter++;
             }
+
             const singlePost = document.createElement('div');
             singlePost.className = "post";
 
@@ -162,19 +97,19 @@ function show_posts(){
             textcontent.innerHTML = `${element.textcontent}`;
             textcontent.className = "postinnercontent";
 
-            const namelink = document.createElement('strong');
+            const namelink = document.createElement('a');
             namelink.innerHTML = `${element.user}`;
-            namelink.setAttribute("id",`nameButton-${element.id}`);
-            namelink.addEventListener('click', () => load_profile(element.userid));
+            namelink.setAttribute("id",`nameButton-${element.user}`);
+            namelink.setAttribute("href",`profile/${element.userid}`);
+           // namelink.addEventListener('click', () => load_profile(element.userid));
 
             const meta = document.createElement('p');
             meta.append("Posted by ");
-            //meta.append(namelink);
             meta.innerHTML += `\n<span id="post-${element.id}-likes">${counter}</span> likes\n${element.timestamp}\n`;
 
-            //meta.innerHTML = `\n<span id="post-${element.id}-likes">${counter}</span> likes\n${element.timestamp}\n`;
+            
             meta.style.borderBottom = '1px solid grey';
-            //meta.
+            
             //likebutton
             const likebutton = document.createElement('input');
             likebutton.setAttribute("id",`post-${element.id}`);

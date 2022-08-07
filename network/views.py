@@ -20,24 +20,16 @@ def index(request):
     })
 
 def load_profile(request,id):
+    try: 
+        User.objects.get(id=id)
+        profile = User.objects.get(id=id)
+        userinfo = {"username": profile.username, "followers": profile.follower_count(),"following": profile.following_count()}
+    except User.DoesNotExist:
+        
+        return JsonResponse({"error": "Profile could not be found."}, status=400)
 
-    profile = User.objects.get(id=id)
-    posts = profile.posts
-    posts = posts.order_by("-timestamp").all()
-    serializedposts = []
-    for post in posts:
-        initial = post.serialize()
-        initial["userhasliked"] = False
-        for liker in post.likes.all():
-            if liker == request.user:
-                initial["userhasliked"] = True
-
-        serializedposts.append(initial)
-    userinfo = {"username": profile.username, "followers": profile.follower_count(),"following": profile.following_count()}
-    serializedposts.append(userinfo)
-    print(serializedposts)
-    return JsonResponse(serializedposts,safe=False, status =201)
-    pass
+    return render(request,"network/profile.html",{"userinfo":userinfo})
+    
 
 
 
@@ -74,8 +66,16 @@ def newpost(request):
     post.save()
     return JsonResponse({"message": "Post uploaded successfully."}, status=201)
 
-def getposts(request):
-    posts = Post.objects.all()
+def getposts(request,id):
+    if(id == 0):
+        posts = Post.objects.all()
+    else:
+        try:
+            user_ = User.objects.get(id=id)
+            posts = Post.objects.filter(user=user_)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User does not exist."}, status=400)
+            
     posts = posts.order_by("-timestamp").all()
     serializedposts = []
     for post in posts:
