@@ -51,16 +51,7 @@ function like_post(id){
     })
     
 }
-function load_profile(userid){
-    fetch(`/profile/${userid}`)
-    .then(result => {
-        return result;
-    })
-        
-        
 
-console.log("tried");
-}
 
 
 function show_posts(userid=0){
@@ -100,7 +91,7 @@ function show_posts(userid=0){
             const namelink = document.createElement('a');
             namelink.innerHTML = `${element.user}`;
             namelink.setAttribute("id",`nameButton-${element.user}`);
-            namelink.setAttribute("href",`profile/${element.userid}`);
+            namelink.setAttribute("href",`/profile/${element.userid}`);
            // namelink.addEventListener('click', () => load_profile(element.userid));
 
             const meta = document.createElement('p');

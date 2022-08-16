@@ -24,9 +24,9 @@
 </div>
 {% endblock %}
 
-
 {% block script %}
     <script>
+        var profileid = "{{stuff}}";
         var likebuttonimg  = "{% static 'network/likebutton.png' %}";
         var haventlikedbuttonimg  = "{% static 'network/haventlikedbutton.png' %}";
     
