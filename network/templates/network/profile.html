@@ -4,7 +4,9 @@
 {% block title %}
 {{userinfo.username}}
 {% endblock %}
-
+{%block pageid%}
+{{userinfo.id}}
+{%endblock%}
 {% block body %}
 <div id="compose-post">
     <button id="showposts">Back to Posts</button>
@@ -16,8 +18,13 @@
 </div>
 <div id="profile">
     <p>{{ userinfo.username }}</p>
-    <p>Followers: {{ userinfo.followers }}</p>
-    <p>Following: {{ userinfo.following }}</p>
+    <p>Followers: <span id="followercount">{{ userinfo.followers }}</span></p>
+    <p>Following: <span id="followingcount">{{ userinfo.following }}</span></p>
+    {% if user.is_authenticated %}
+    {% if user.id != userinfo.id %}
+    <button id="followbutton">Follow</button>
+    {% endif %}
+    {% endif %}
 
 </div>
 

@@ -23,15 +23,30 @@ def load_profile(request,id):
     try: 
         User.objects.get(id=id)
         profile = User.objects.get(id=id)
-        userinfo = {"username": profile.username, "followers": profile.follower_count(),"following": profile.following_count()}
+        userinfo = {"username": profile.username,"id": profile.id, "followers": profile.follower_count(),"following": profile.following_count()}
     except User.DoesNotExist:
         
         return JsonResponse({"error": "Profile could not be found."}, status=400)
 
     return render(request,"network/profile.html",{"userinfo":userinfo})
     
+@csrf_exempt
+@login_required(login_url='login')
+def follow_user(request,userid):
+    print(f"user id to follow: {userid}")
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required."}, status=400)
 
-
+    usertofollow = User.objects.get(id=userid)
+    
+    for followers in usertofollow.followers.all():
+        if followers == request.user:
+            usertofollow.followers.remove(request.user)
+            usertofollow.save()
+            return JsonResponse({"message": "You've unfollowed this user", "followstatus": "0"}, status=201)
+    usertofollow.followers.add(request.user)
+    usertofollow.save()
+    return JsonResponse({"message": "User Followed.", "followstatus": "1"}, status=201)
 
 @csrf_exempt
 @login_required(login_url='login')
@@ -85,7 +100,7 @@ def getposts(request,id):
             if liker == request.user:
                 initial["userhasliked"] = True
         serializedposts.append(initial)
-    print(serializedposts)
+    #print(serializedposts)
     return JsonResponse(serializedposts,safe=False, status =201)
 
 def login_view(request):

@@ -3,9 +3,19 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("loaded...");
     document.querySelector('#compose-post').onsubmit = try_post;
     //document.querySelector('#newpost').addEventListener('click', compose_post);
-    document.querySelector('#showposts').addEventListener('click', show_posts);
+    
+    let profileid = parseInt(document.querySelector('#profileid').innerHTML);
+    profileid < 0 ? profileid = 0: '';
+    document.querySelector('#showposts').addEventListener('click',()=> show_posts(profileid));
+    try{
+    document.querySelector('#followbutton').addEventListener('click',()=> follow_user(profileid));
+    }
+    catch(typeerror){
+
+    }
     console.log("going to show posts");
-    show_posts();
+    show_posts(profileid);
+    
 });
 
 //my helper functions 
@@ -52,6 +62,28 @@ function like_post(id){
     
 }
 
+function follow_user(id){
+    fetch(`/followuser/${id}`,{
+        method: 'POST',
+        body: ""
+        })
+
+  
+    .then(response => response.json())
+    .then(result => {
+        if(result.followstatus === '1'){
+        document.querySelector(`#followbutton`).innerHTML = "Unfollow";
+        document.querySelector(`#followercount`).innerHTML = parseInt(document.querySelector(`#followercount`).innerHTML)+1;
+        
+        }
+        else if(result.followstatus === '0'){
+            document.querySelector(`#followbutton`).innerHTML = "Follow";
+            document.querySelector(`#followercount`).innerHTML = parseInt(document.querySelector(`#followercount`).innerHTML)-1;
+        }
+        console.log(result.message)
+    })
+    
+}
 
 
 function show_posts(userid=0){
@@ -71,7 +103,7 @@ function show_posts(userid=0){
     fetch(`/getposts/${userid}`)
     .then(response => response.json())
     .then(posts => {
-        console.log(posts);
+        //console.log(posts);
         posts.forEach(element =>{
             console.log("list of elements");
             console.log(element);
@@ -146,7 +178,7 @@ function try_post(){
   })
   .then(response => response.json())
   .then(result => {
-    console.log(result);
+    //console.log(result);
     show_posts();
   })
 
