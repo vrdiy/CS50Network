@@ -68,6 +68,30 @@ function like_post(id){
     
 }
 
+function edit_post(id){
+    const posttoedit = document.querySelector(`#editpost-${id}`).parentElement;
+    postcontent = posttoedit.querySelector(".postinnercontent");
+    //const postcontentvalue = JSON.parse(JSON.stringify(postcontent.innerHTML));
+    const postcontentvalue = postcontent.innerHTML;
+    postcontent.style.display = 'none';
+
+    try{
+        posttoedit.querySelector('textarea').remove();
+
+    }catch(error){
+
+    }
+    const editarea = document.createElement('textarea');
+    editarea.setAttribute("id",`editedcontent-${id}`);
+    editarea.value = postcontentvalue;
+    //postcontent.innerHTML = ``;
+    editarea.setAttribute("style","color: red; margin-bottom: 60px; margin-left: 10px;");
+
+    posttoedit.append(editarea);
+
+
+}
+
 function follow_user(id){
     fetch(`/followuser/${id}`,{
         method: 'POST',
@@ -115,6 +139,10 @@ function show_posts(userid=0){
     fetch(`/getposts/${userid}`)
     .then(response => response.json())
     .then(posts => {
+        console.log("count:");
+        //There is meta data in a dict at the end of the response
+        console.log(posts[posts.length-1].count);
+        posts.pop()
         //console.log(posts);
         posts.forEach(element =>{
             //console.log("list of elements");
@@ -157,11 +185,24 @@ function show_posts(userid=0){
             else{
                 likebutton.src = haventlikedbuttonimg;
             }
+            
+
+
+            //editbutton
+            //const spanthebutton = document.createElement('span');
+            const editbutton = document.createElement('input');
+            editbutton.setAttribute("id",`editpost-${element.id}`);
+            editbutton.addEventListener('click', ()=> edit_post(element.id));
+            editbutton.type = "image";
+            editbutton.src = editbuttonimg;
+            //spanthebutton.append(editbutton);
+
 
             singlePost.append(meta);
             singlePost.append(textcontent);
+            element.ownpost ? singlePost.append(editbutton) : null;
             singlePost.append(likebutton);
-            singlePost.append(namelink)
+            singlePost.append(namelink);
 
             postsdiv.append(singlePost);
         })

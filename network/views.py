@@ -88,6 +88,7 @@ def newpost(request):
     post.save()
     return JsonResponse({"message": "Post uploaded successfully."}, status=201)
 
+
 def getposts(request,id):
     if(id == 0):
         posts = Post.objects.all()
@@ -103,15 +104,30 @@ def getposts(request,id):
     for post in posts:
         initial = post.serialize()
         initial["userhasliked"] = False
+        if(request.user == post.user):
+            initial["ownpost"] = True
+        else:
+            initial["ownpost"] = False
+
         for liker in post.likes.all():
             if liker == request.user:
                 initial["userhasliked"] = True
         serializedposts.append(initial)
     #print(serializedposts)
+
     paginator = Paginator(serializedposts,10)
-    currentpage = paginator.get_page(2)
+    currentpage = paginator.get_page(1)
+    page = list(currentpage)
+
+    pagemeta = {}
+    pagemeta['count']= paginator.count
+    pagemeta['num_pages']= paginator.num_pages
+    pagemeta['has_next']= currentpage.has_next()
+    pagemeta['has_previous']= currentpage.has_previous()
+    page.append(pagemeta)
     
-    return JsonResponse(list(currentpage),safe=False, status =201)
+    return JsonResponse(page,safe=False,status =201)
+
 
 def login_view(request):
     if request.method == "POST":
