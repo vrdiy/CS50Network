@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator
 
 from .models import User, Post
 
@@ -31,8 +32,10 @@ def load_profile(request,id):
     return render(request,"network/profile.html",{"userinfo":userinfo})
     
 @csrf_exempt
-@login_required(login_url='login')
 def follow_user(request,userid):
+    if(request.user.is_authenticated != True):
+        print("what is going wrong here?")
+        return JsonResponse({"error": "User is not logged in."}, status=401)
     print(f"user id to follow: {userid}")
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
@@ -49,8 +52,10 @@ def follow_user(request,userid):
     return JsonResponse({"message": "User Followed.", "followstatus": "1"}, status=201)
 
 @csrf_exempt
-@login_required(login_url='login')
 def likepost(request,postid):
+    if(request.user.is_authenticated != True):
+        print("what is going wrong here?")
+        return JsonResponse({"error": "User is not logged in."}, status=401)
     print("GOT TO LIKE POST")
     print(f"post id to like: {postid}")
     if request.method != "POST":
@@ -69,8 +74,10 @@ def likepost(request,postid):
 
 
 @csrf_exempt
-@login_required(login_url='login')
 def newpost(request):
+    if(request.user.is_authenticated != True):
+        print("what is going wrong here?")
+        return JsonResponse({"error": "User is not logged in."}, status=401)
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
 
@@ -101,7 +108,10 @@ def getposts(request,id):
                 initial["userhasliked"] = True
         serializedposts.append(initial)
     #print(serializedposts)
-    return JsonResponse(serializedposts,safe=False, status =201)
+    paginator = Paginator(serializedposts,10)
+    currentpage = paginator.get_page(2)
+    
+    return JsonResponse(list(currentpage),safe=False, status =201)
 
 def login_view(request):
     if request.method == "POST":

@@ -45,7 +45,13 @@ function like_post(id){
         body: ""
         })
 
-  
+    .then(response => {
+        if(response.status === 401){
+            window.location.replace("/login");
+        }
+        console.log(response.status);
+        return response;
+    })
     .then(response => response.json())
     .then(result => {
         if(result.likestatus === '1'){
@@ -68,7 +74,13 @@ function follow_user(id){
         body: ""
         })
 
-  
+        .then(response => {
+            if(response.status === 401){
+                window.location.replace("/login");
+            }
+            console.log(response.status);
+            return response;
+        })
     .then(response => response.json())
     .then(result => {
         if(result.followstatus === '1'){
@@ -105,9 +117,9 @@ function show_posts(userid=0){
     .then(posts => {
         //console.log(posts);
         posts.forEach(element =>{
-            console.log("list of elements");
-            console.log(element);
-            console.log("end list");
+            //console.log("list of elements");
+            //console.log(element);
+            //console.log("end list");
             counter = 0;
             for(let like in element.likes){
                 counter++;
@@ -176,9 +188,17 @@ function try_post(){
         })
 
   })
+  .then(response => {
+    if(response.status === 401){
+        window.location.replace("/login");
+    }
+    console.log(response.status);
+    return response;
+})
   .then(response => response.json())
   .then(result => {
-    //console.log(result);
+    console.log(result);
+    console.log("bottom of try_post");
     show_posts();
   })
 
