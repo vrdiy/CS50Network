@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
     profileid < 0 ? profileid = 0: '';
     document.querySelector('#showposts').addEventListener('click',()=> show_posts(profileid));
     try{
+        document.querySelector('#following').addEventListener('click',()=> show_posts(undefined,undefined,true));
+        }
+        catch(typeerror){
+    
+        }
+    try{
     document.querySelector('#followbutton').addEventListener('click',()=> follow_user(profileid));
     }
     catch(typeerror){
@@ -36,6 +42,47 @@ function boldThisHTML(str){
     namelink.setAttribute("id",`nameButton-${id}`);
     return namelink;
     
+}
+
+function page_bootstrap(id,currentpage){
+    
+    paginationbootstrap = document.createElement('nav');
+    paginationbootstrap.setAttribute('aria-label', '...');
+    paginationunorderedlist = document.createElement('ul');
+    paginationunorderedlist.setAttribute('class','pagination');
+
+    if(currentpage.has_previous){
+        paginationunorderedlist.innerHTML += `<li class="page-item">
+        <a class="page-link" href="javascript:show_posts(${id},${Number(currentpage.page_num)-1})">Previous</a>
+      </li>`
+    }else{
+        paginationunorderedlist.innerHTML += `<li class="page-item disabled">
+        <a class="page-link" href="" tabindex="-1" aria-disabled="true">Previous</a>
+      </li>`
+    }
+    
+    
+    for(let i = 1; i <= Number(currentpage.num_pages); i++){
+        //if(i === Number(currentpage.page_num)){
+        paginationunorderedlist.innerHTML += `<li class="page-item ${(i === Number(currentpage.page_num)? 'active' : '')}">
+        <a class="page-link" href="javascript:show_posts(${id},${i})">${i}</a>
+        </li>`;
+    }
+
+    if(currentpage.has_next){
+        paginationunorderedlist.innerHTML += `<li class="page-item">
+        <a class="page-link" href="javascript:show_posts(${id},${Number(currentpage.page_num)+1})">Next</a>
+      </li>`;
+    }else{
+        paginationunorderedlist.innerHTML += `<li class="page-item disabled">
+        <a class="page-link" href="" tabindex="-1" aria-disabled="true">Next</a>
+      </li>`;
+    }
+
+    paginationbootstrap.append(paginationunorderedlist);
+    return paginationbootstrap;
+   
+
 }
 //-----------------------------------------
 
@@ -76,20 +123,68 @@ function edit_post(id){
     postcontent.style.display = 'none';
 
     try{
-        posttoedit.querySelector('textarea').remove();
+        posttoedit.querySelector('div').remove()
+        //posttoedit.querySelector('textarea').remove();
+        //posttoedit.querySelector('button').remove();
 
     }catch(error){
 
     }
+    const editdiv = document.createElement('div');
+    const savebutton = document.createElement('button');
+    savebutton.setAttribute("id",`save-form-button-${id}`);
+    savebutton.addEventListener('click', ()=> try_edit(id,document.querySelector(`#editedcontent-${id}`).value));
+    savebutton.innerHTML = 'Save';
     const editarea = document.createElement('textarea');
     editarea.setAttribute("id",`editedcontent-${id}`);
+    editarea.style.width = '80vw';
+    editarea.style.color = 'blue';
     editarea.value = postcontentvalue;
     //postcontent.innerHTML = ``;
-    editarea.setAttribute("style","color: red; margin-bottom: 60px; margin-left: 10px;");
+    //editarea.setAttribute("style","color: red; margin-bottom: 60px; margin-left: 10px;");
+    editdiv.append(editarea);
+    editdiv.append(savebutton);
+    posttoedit.append(editdiv);
+    //posttoedit.append(editarea);
+    //posttoedit.append(savebutton);
 
-    posttoedit.append(editarea);
+    
+}
 
+function try_edit(postid, textcontent){
+    
 
+    fetch('/editpost',{
+        method: 'POST',
+        body: JSON.stringify({
+            textcontent: textcontent,
+            postid: postid
+        })
+
+  })
+  .then(response => {
+    if(response.status === 401){
+        window.location.replace("/login");
+    }
+    if(response.status === 201){
+        
+    const posttoedit = document.querySelector(`#editpost-${postid}`).parentElement;
+    postcontent = posttoedit.querySelector(".postinnercontent");
+    postcontent.innerHTML = textcontent;
+    postcontent.style.display = 'block';
+    document.querySelector(`#editedcontent-${postid}`).remove();
+    document.querySelector(`#save-form-button-${postid}`).remove();
+    }
+    console.log(response.status);
+    return response;
+})
+  .then(response => response.json())
+  .then(result => {
+    console.log(result);
+    console.log("bottom of try_edit");
+  })
+
+  return false;
 }
 
 function follow_user(id){
@@ -122,7 +217,7 @@ function follow_user(id){
 }
 
 
-function show_posts(userid=0){
+function show_posts(userid=0,pagenum=1,following = false){
 
     document.querySelector('#compose-post').style.display = 'none';
     document.querySelector('#posts').style.display = 'block';
@@ -136,13 +231,23 @@ function show_posts(userid=0){
 
     document.querySelector('#text-content').value = '';
 
-    fetch(`/getposts/${userid}`)
-    .then(response => response.json())
+    fetch(`/getposts/${userid}?page_number=${pagenum}&following=${following}`)
+    .then(response => {
+        if(response.status != 201){return false;}
+        else{
+            return response.json();
+        }
+        })
     .then(posts => {
+        if(posts){
         console.log("count:");
         //There is meta data in a dict at the end of the response
-        console.log(posts[posts.length-1].count);
-        posts.pop()
+        //console.log(posts[posts.length-1].count);
+        //console.log(`From showposts: ${posts[posts.length-1].page_num}`)
+        console.log(posts)
+        postsdiv.append(page_bootstrap(userid,posts[posts.length-1]));
+        
+        posts.pop();
         //console.log(posts);
         posts.forEach(element =>{
             //console.log("list of elements");
@@ -156,7 +261,9 @@ function show_posts(userid=0){
             const singlePost = document.createElement('div');
             singlePost.className = "post";
 
+            const contentdiv = document.createElement('div');
             const textcontent = document.createElement('p');
+            
             textcontent.innerHTML = `${element.textcontent}`;
             textcontent.className = "postinnercontent";
 
@@ -206,6 +313,8 @@ function show_posts(userid=0){
 
             postsdiv.append(singlePost);
         })
+        //postsdiv.append(page_bootstrap(userid,posts[posts.length-1]))
+    }
     })
 
 }

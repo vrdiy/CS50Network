@@ -27,3 +27,6 @@ class Post(models.Model):
             "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p"),
             "likes": [user.username for user in self.likes.all()]
         }
+    def updatePost(self,postcontent):
+        self.textcontent = postcontent
+        return

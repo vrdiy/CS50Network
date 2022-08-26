@@ -88,17 +88,46 @@ def newpost(request):
     post.save()
     return JsonResponse({"message": "Post uploaded successfully."}, status=201)
 
+@csrf_exempt
+def editpost(request):
+    if(request.user.is_authenticated != True):
+        print("what is going wrong here?")
+        return JsonResponse({"error": "User is not logged in."}, status=401)
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required."}, status=400)
+
+    data = json.loads(request.body)
+    postcontent = data.get("textcontent", "")
+    postid = data.get("postid","")
+    posttoedit = Post.objects.get(id=postid)
+    if(posttoedit.user == request.user):
+        posttoedit.textcontent = postcontent
+        posttoedit.updatePost(postcontent)
+        posttoedit.save()
+        return JsonResponse({"message": "Post edited successfully."}, status=201)
+    else:
+        return JsonResponse({"error": "You are not the owner of this post."}, status=401)
+
 
 def getposts(request,id):
-    if(id == 0):
-        posts = Post.objects.all()
-    else:
+    
+    if(id != 0):
         try:
             user_ = User.objects.get(id=id)
             posts = Post.objects.filter(user=user_)
         except User.DoesNotExist:
             return JsonResponse({"error": "User does not exist."}, status=400)
-            
+
+    if(request.GET.get('following') == "true"):
+        print(request.GET.get('following'))
+        print(request.GET.get('following') == "true")
+        user_ = User.objects.get(id=request.user.id)
+        posts = Post.objects.filter(user__in=user_.following.all())
+
+    else:
+        posts = Post.objects.all()
+
+
     posts = posts.order_by("-timestamp").all()
     serializedposts = []
     for post in posts:
@@ -114,9 +143,19 @@ def getposts(request,id):
                 initial["userhasliked"] = True
         serializedposts.append(initial)
     #print(serializedposts)
+    
+    paginator = Paginator(serializedposts,3)
+    
+    try:
+        pagenum = request.GET.get('page_number')
+        print("from view:")
+        print(pagenum)
+        print('end from view')
+    except KeyError: 
+        pagenum = 1
+        print('page number not found')
 
-    paginator = Paginator(serializedposts,10)
-    currentpage = paginator.get_page(1)
+    currentpage = paginator.get_page(pagenum)
     page = list(currentpage)
 
     pagemeta = {}
@@ -124,7 +163,9 @@ def getposts(request,id):
     pagemeta['num_pages']= paginator.num_pages
     pagemeta['has_next']= currentpage.has_next()
     pagemeta['has_previous']= currentpage.has_previous()
+    pagemeta['page_num'] = pagenum
     page.append(pagemeta)
+    
     
     return JsonResponse(page,safe=False,status =201)
 
