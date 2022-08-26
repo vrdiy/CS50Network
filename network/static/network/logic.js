@@ -203,6 +203,12 @@ function show_posts(userid=0,pagenum=1,following = false){
     postsdiv.style.display = 'block';
     postsdiv.innerHTML = '';
 
+    if(following){history.replaceState("","","/");
+        followingheader = document.createElement('strong');
+        followingheader.innerHTML = "Following";
+        followingheader.setAttribute("style","font-size: 35px; color: #b5b399;");
+        postsdiv.append(followingheader);
+    }
     document.querySelector('#compose-post').style.display = 'none';
     if((userid === 0)&&(!following)){
     const newpostbutton = document.createElement('button');
@@ -236,7 +242,7 @@ function show_posts(userid=0,pagenum=1,following = false){
         paginationdiv.append(page_bootstrap(userid,posts[posts.length-1]));
 
         if(posts.length < 2){
-            postsdiv.insertAdjacentText("beforebegin","No Posts!");
+            postsdiv.append("No Posts!");
         }
         posts.pop();
         //console.log(posts);
