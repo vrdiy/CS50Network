@@ -114,37 +114,29 @@ function like_post(id){
 function edit_post(id){
     const posttoedit = document.querySelector(`#editpost-${id}`).parentElement;
     postcontent = posttoedit.querySelector(".postinnercontent");
-    //const postcontentvalue = JSON.parse(JSON.stringify(postcontent.innerHTML));
     const postcontentvalue = postcontent.innerHTML;
     postcontent.style.display = 'none';
-
-    try{
-        posttoedit.querySelector('div').remove()
-
-    }catch(error){
-
-    }
-    const editdiv = document.createElement('div');
+    const editdiv = posttoedit.querySelector(`#contentdiv-${id}`);
     const savebutton = document.createElement('button');
     savebutton.setAttribute("id",`save-form-button-${id}`);
+    savebutton.style.backgroundColor = '#d1f7c3' //pale green
+    savebutton.style.color = 'grey';
     savebutton.addEventListener('click', ()=> try_edit(id,document.querySelector(`#editedcontent-${id}`).value));
     savebutton.innerHTML = 'Save';
     const editarea = document.createElement('textarea');
     editarea.setAttribute("id",`editedcontent-${id}`);
     editarea.style.width = '80vw';
-    editarea.style.color = 'blue';
+    editarea.style.color = '#5e3108';
     editarea.value = postcontentvalue;
-    //postcontent.innerHTML = ``;
-    editdiv.append(editarea);
-    editdiv.append(savebutton);
-    posttoedit.append(editdiv);
+    editdiv.insertAdjacentElement('beforebegin',editarea);
+    editdiv.insertAdjacentElement('beforebegin',savebutton);
+   
 
     
 }
 
 function try_edit(postid, textcontent){
     
-
     fetch('/editpost',{
         method: 'POST',
         body: JSON.stringify({
@@ -159,19 +151,17 @@ function try_edit(postid, textcontent){
     }
     if(response.status === 201){
         
-    const posttoedit = document.querySelector(`#editpost-${postid}`).parentElement;
-    postcontent = posttoedit.querySelector(".postinnercontent");
-    postcontent.innerHTML = textcontent;
-    postcontent.style.display = 'block';
-    document.querySelector(`#editedcontent-${postid}`).remove();
-    document.querySelector(`#save-form-button-${postid}`).remove();
-    }
-    console.log(`try_edit status: ${response.status}`);
-    return response;
-})
-  .then(response => response.json())
-  .then(result => {
-    console.log(result);
+        return response;
+    }})
+    .then(response => response.json())
+    .then(result => {
+        const posttoedit = document.querySelector(`#editpost-${postid}`).parentElement;
+        postcontent = posttoedit.querySelector(".postinnercontent");
+        postcontent.innerHTML = result.textcontent;
+        postcontent.style.display = 'block';
+        document.querySelector(`#editedcontent-${postid}`).remove();
+        document.querySelector(`#save-form-button-${postid}`).remove();
+        console.log(result);
   })
 
   return false;
@@ -209,15 +199,18 @@ function follow_user(id){
 
 function show_posts(userid=0,pagenum=1,following = false){
 
-    document.querySelector('#compose-post').style.display = 'none';
-    document.querySelector('#posts').style.display = 'block';
-    document.querySelector('#posts').innerHTML = '';
     const postsdiv = document.querySelector('#posts');
+    postsdiv.style.display = 'block';
+    postsdiv.innerHTML = '';
+
+    document.querySelector('#compose-post').style.display = 'none';
+    if((userid === 0)&&(!following)){
     const newpostbutton = document.createElement('button');
     newpostbutton.addEventListener('click', compose_post);
     newpostbutton.setAttribute("id","newpost");
     newpostbutton.innerHTML = "New Post";
     postsdiv.append(newpostbutton);
+    }
 
     document.querySelector('#text-content').value = '';
 
@@ -226,7 +219,7 @@ function show_posts(userid=0,pagenum=1,following = false){
         profilediv.style.display = 'none';
         profilediv.innerHTML = '';
     }
-    
+
     fetch(`/getposts/${userid}?page_number=${pagenum}&following=${following}`)
     .then(response => {
         if(response.status != 201){return false;}
@@ -238,8 +231,13 @@ function show_posts(userid=0,pagenum=1,following = false){
         if(posts){
         //There is meta data in a dict at the end of the response
         console.log(posts)
-        postsdiv.append(page_bootstrap(userid,posts[posts.length-1]));
-        
+
+        paginationdiv = document.createElement('div');
+        paginationdiv.append(page_bootstrap(userid,posts[posts.length-1]));
+
+        if(posts.length < 2){
+            postsdiv.insertAdjacentText("beforebegin","No Posts!");
+        }
         posts.pop();
         //console.log(posts);
         posts.forEach(element =>{
@@ -252,6 +250,7 @@ function show_posts(userid=0,pagenum=1,following = false){
             singlePost.className = "post";
 
             const contentdiv = document.createElement('div');
+            contentdiv.setAttribute("id",`contentdiv-${element.id}`)
             const textcontent = document.createElement('p');
             
             textcontent.innerHTML = `${element.textcontent}`;
@@ -294,12 +293,14 @@ function show_posts(userid=0,pagenum=1,following = false){
 
 
             singlePost.append(meta);
-            singlePost.append(textcontent);
+            contentdiv.append(textcontent);
+            singlePost.append(contentdiv);
             element.ownpost ? singlePost.append(editbutton) : null;
             singlePost.append(likebutton);
             singlePost.append(namelink);
 
             postsdiv.append(singlePost);
+            postsdiv.append(paginationdiv);
         })
     }
     })

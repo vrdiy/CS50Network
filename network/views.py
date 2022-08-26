@@ -26,12 +26,10 @@ def load_profile(request,id):
         profile = User.objects.get(id=id)
         followers = profile.followers.all()
         follower = followers.filter(id=request.user.id)
-        print(follower)
         if not follower:
             follows = False
         else:
             follows = True
-        print(f"follow status:{follows}")
         userinfo = {"username": profile.username,"id": profile.id, "followers": profile.follower_count(),"following": profile.following_count(), "isfollowing": follows}
     except User.DoesNotExist:
         
@@ -42,9 +40,7 @@ def load_profile(request,id):
 @csrf_exempt
 def follow_user(request,userid):
     if(request.user.is_authenticated != True):
-        print("what is going wrong here?")
         return JsonResponse({"error": "User is not logged in."}, status=401)
-    print(f"user id to follow: {userid}")
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
 
@@ -81,7 +77,6 @@ def likepost(request,postid):
 @csrf_exempt
 def newpost(request):
     if(request.user.is_authenticated != True):
-        print("what is going wrong here?")
         return JsonResponse({"error": "User is not logged in."}, status=401)
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
@@ -109,7 +104,7 @@ def editpost(request):
         posttoedit.textcontent = postcontent
         posttoedit.updatePost(postcontent)
         posttoedit.save()
-        return JsonResponse({"message": "Post edited successfully."}, status=201)
+        return JsonResponse({"message": "Post edited successfully.","textcontent":postcontent}, status=201)
     else:
         return JsonResponse({"error": "You are not the owner of this post."}, status=401)
 
@@ -123,8 +118,6 @@ def getposts(request,id):
             return JsonResponse({"error": "User does not exist."}, status=400)
 
     elif(request.GET.get('following') == "true"):
-        print(request.GET.get('following'))
-        print(request.GET.get('following') == "true")
         user_ = User.objects.get(id=request.user.id)
         posts = Post.objects.filter(user__in=user_.following.all())
 
@@ -148,16 +141,13 @@ def getposts(request,id):
         serializedposts.append(initial)
     #print(serializedposts)
     
-    paginator = Paginator(serializedposts,3)
+    paginator = Paginator(serializedposts,10)
     
     try:
         pagenum = request.GET.get('page_number')
-        print("from view:")
-        print(pagenum)
-        print('end from view')
+        
     except KeyError: 
         pagenum = 1
-        print('page number not found')
 
     currentpage = paginator.get_page(pagenum)
     page = list(currentpage)

@@ -17,12 +17,12 @@
 </form>
 </div>
 <div id="profile">
-    <p>{{ userinfo.username }}</p>
-    <p>Followers: <span id="followercount">{{ userinfo.followers }}</span></p>
-    <p>Following: <span id="followingcount">{{ userinfo.following }}</span></p>
-    {% if user.is_authenticated %}
-    {% if user.id != userinfo.id %}
-    <button id="followbutton">
+    <p style="margin-bottom: 0px;"><strong style="font-size: 35px; color: #b5b399;">{{ userinfo.username }}</strong></p>
+        <span>Followers: </span><span id="followercount">{{ userinfo.followers }}</span>
+        <span>Following: </span><span id="followingcount">{{ userinfo.following }}</span>
+        {% if user.is_authenticated %}
+        {% if user.id != userinfo.id %}
+        <button id="followbutton">
         {% if userinfo.isfollowing %}
         Unfollow
         {% else %}
@@ -31,7 +31,7 @@
     </button>
     {% endif %}
     {% endif %}
-
+    
 </div>
 
 <div id="posts">

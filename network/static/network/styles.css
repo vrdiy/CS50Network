@@ -28,3 +28,26 @@
     font-family: sans-serif;
     
 }
+textarea{
+    text-align: justify;
+    border-radius: 5px;
+    font-family: sans-serif;
+    margin: 5px;
+    background-color: beige;
+}
+button{
+
+    text-align: justify;
+    border-radius: 5px;
+    font-family: sans-serif;
+    margin: 5px;
+    background-color: beige;
+}
+#submit-post{
+
+    text-align: justify;
+    border-radius: 5px;
+    font-family: sans-serif;
+    margin: 5px;
+    background-color: beige;
+}
