@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
  
-    console.log("loaded...");
+    console.log("DOMContentLoaded");
     document.querySelector('#compose-post').onsubmit = try_post;
-    //document.querySelector('#newpost').addEventListener('click', compose_post);
     
     let profileid = parseInt(document.querySelector('#profileid').innerHTML);
     profileid < 0 ? profileid = 0: '';
@@ -19,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
     catch(typeerror){
 
     }
-    console.log("going to show posts");
     show_posts(profileid);
     
 });
@@ -50,39 +48,37 @@ function page_bootstrap(id,currentpage){
     paginationbootstrap.setAttribute('aria-label', '...');
     paginationunorderedlist = document.createElement('ul');
     paginationunorderedlist.setAttribute('class','pagination');
-
+    
     if(currentpage.has_previous){
         paginationunorderedlist.innerHTML += `<li class="page-item">
         <a class="page-link" href="javascript:show_posts(${id},${Number(currentpage.page_num)-1})">Previous</a>
-      </li>`
+        </li>`
     }else{
         paginationunorderedlist.innerHTML += `<li class="page-item disabled">
         <a class="page-link" href="" tabindex="-1" aria-disabled="true">Previous</a>
-      </li>`
+        </li>`
     }
     
-    
     for(let i = 1; i <= Number(currentpage.num_pages); i++){
-        //if(i === Number(currentpage.page_num)){
         paginationunorderedlist.innerHTML += `<li class="page-item ${(i === Number(currentpage.page_num)? 'active' : '')}">
         <a class="page-link" href="javascript:show_posts(${id},${i})">${i}</a>
         </li>`;
     }
-
+    
     if(currentpage.has_next){
         paginationunorderedlist.innerHTML += `<li class="page-item">
         <a class="page-link" href="javascript:show_posts(${id},${Number(currentpage.page_num)+1})">Next</a>
-      </li>`;
+        </li>`;
     }else{
         paginationunorderedlist.innerHTML += `<li class="page-item disabled">
         <a class="page-link" href="" tabindex="-1" aria-disabled="true">Next</a>
-      </li>`;
+        </li>`;
     }
-
+    
     paginationbootstrap.append(paginationunorderedlist);
     return paginationbootstrap;
-   
-
+    
+    
 }
 //-----------------------------------------
 
@@ -96,7 +92,7 @@ function like_post(id){
         if(response.status === 401){
             window.location.replace("/login");
         }
-        console.log(response.status);
+        console.log(`like_post status: ${response.status}`);
         return response;
     })
     .then(response => response.json())
@@ -124,8 +120,6 @@ function edit_post(id){
 
     try{
         posttoedit.querySelector('div').remove()
-        //posttoedit.querySelector('textarea').remove();
-        //posttoedit.querySelector('button').remove();
 
     }catch(error){
 
@@ -141,12 +135,9 @@ function edit_post(id){
     editarea.style.color = 'blue';
     editarea.value = postcontentvalue;
     //postcontent.innerHTML = ``;
-    //editarea.setAttribute("style","color: red; margin-bottom: 60px; margin-left: 10px;");
     editdiv.append(editarea);
     editdiv.append(savebutton);
     posttoedit.append(editdiv);
-    //posttoedit.append(editarea);
-    //posttoedit.append(savebutton);
 
     
 }
@@ -175,13 +166,12 @@ function try_edit(postid, textcontent){
     document.querySelector(`#editedcontent-${postid}`).remove();
     document.querySelector(`#save-form-button-${postid}`).remove();
     }
-    console.log(response.status);
+    console.log(`try_edit status: ${response.status}`);
     return response;
 })
   .then(response => response.json())
   .then(result => {
     console.log(result);
-    console.log("bottom of try_edit");
   })
 
   return false;
@@ -197,7 +187,7 @@ function follow_user(id){
             if(response.status === 401){
                 window.location.replace("/login");
             }
-            console.log(response.status);
+            console.log(`follow_user status: ${response.status}`);
             return response;
         })
     .then(response => response.json())
@@ -231,6 +221,12 @@ function show_posts(userid=0,pagenum=1,following = false){
 
     document.querySelector('#text-content').value = '';
 
+    if(following){
+        profilediv = document.querySelector('#profile');
+        profilediv.style.display = 'none';
+        profilediv.innerHTML = '';
+    }
+    
     fetch(`/getposts/${userid}?page_number=${pagenum}&following=${following}`)
     .then(response => {
         if(response.status != 201){return false;}
@@ -240,19 +236,13 @@ function show_posts(userid=0,pagenum=1,following = false){
         })
     .then(posts => {
         if(posts){
-        console.log("count:");
         //There is meta data in a dict at the end of the response
-        //console.log(posts[posts.length-1].count);
-        //console.log(`From showposts: ${posts[posts.length-1].page_num}`)
         console.log(posts)
         postsdiv.append(page_bootstrap(userid,posts[posts.length-1]));
         
         posts.pop();
         //console.log(posts);
         posts.forEach(element =>{
-            //console.log("list of elements");
-            //console.log(element);
-            //console.log("end list");
             counter = 0;
             for(let like in element.likes){
                 counter++;
@@ -296,13 +286,11 @@ function show_posts(userid=0,pagenum=1,following = false){
 
 
             //editbutton
-            //const spanthebutton = document.createElement('span');
             const editbutton = document.createElement('input');
             editbutton.setAttribute("id",`editpost-${element.id}`);
             editbutton.addEventListener('click', ()=> edit_post(element.id));
             editbutton.type = "image";
             editbutton.src = editbuttonimg;
-            //spanthebutton.append(editbutton);
 
 
             singlePost.append(meta);
@@ -313,7 +301,6 @@ function show_posts(userid=0,pagenum=1,following = false){
 
             postsdiv.append(singlePost);
         })
-        //postsdiv.append(page_bootstrap(userid,posts[posts.length-1]))
     }
     })
 
@@ -342,13 +329,12 @@ function try_post(){
     if(response.status === 401){
         window.location.replace("/login");
     }
-    console.log(response.status);
+    console.log(`try_post status: ${response.status}`);
     return response;
 })
   .then(response => response.json())
   .then(result => {
     console.log(result);
-    console.log("bottom of try_post");
     show_posts();
   })
 

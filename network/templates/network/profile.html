@@ -22,7 +22,13 @@
     <p>Following: <span id="followingcount">{{ userinfo.following }}</span></p>
     {% if user.is_authenticated %}
     {% if user.id != userinfo.id %}
-    <button id="followbutton">Follow</button>
+    <button id="followbutton">
+        {% if userinfo.isfollowing %}
+        Unfollow
+        {% else %}
+        Follow
+        {%endif%}
+    </button>
     {% endif %}
     {% endif %}
 

@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
-
+import html
 from .models import User, Post
 
 
@@ -24,7 +24,15 @@ def load_profile(request,id):
     try: 
         User.objects.get(id=id)
         profile = User.objects.get(id=id)
-        userinfo = {"username": profile.username,"id": profile.id, "followers": profile.follower_count(),"following": profile.following_count()}
+        followers = profile.followers.all()
+        follower = followers.filter(id=request.user.id)
+        print(follower)
+        if not follower:
+            follows = False
+        else:
+            follows = True
+        print(f"follow status:{follows}")
+        userinfo = {"username": profile.username,"id": profile.id, "followers": profile.follower_count(),"following": profile.following_count(), "isfollowing": follows}
     except User.DoesNotExist:
         
         return JsonResponse({"error": "Profile could not be found."}, status=400)
@@ -54,10 +62,7 @@ def follow_user(request,userid):
 @csrf_exempt
 def likepost(request,postid):
     if(request.user.is_authenticated != True):
-        print("what is going wrong here?")
         return JsonResponse({"error": "User is not logged in."}, status=401)
-    print("GOT TO LIKE POST")
-    print(f"post id to like: {postid}")
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
 
@@ -83,7 +88,7 @@ def newpost(request):
 
     data = json.loads(request.body)
     postcontent = data.get("textcontent", "")
-
+    postcontent = html.escape(postcontent)
     post = Post(user=request.user,textcontent=postcontent)
     post.save()
     return JsonResponse({"message": "Post uploaded successfully."}, status=201)
@@ -91,13 +96,13 @@ def newpost(request):
 @csrf_exempt
 def editpost(request):
     if(request.user.is_authenticated != True):
-        print("what is going wrong here?")
         return JsonResponse({"error": "User is not logged in."}, status=401)
     if request.method != "POST":
         return JsonResponse({"error": "POST request required."}, status=400)
 
     data = json.loads(request.body)
     postcontent = data.get("textcontent", "")
+    postcontent = html.escape(postcontent)
     postid = data.get("postid","")
     posttoedit = Post.objects.get(id=postid)
     if(posttoedit.user == request.user):
@@ -110,7 +115,6 @@ def editpost(request):
 
 
 def getposts(request,id):
-    
     if(id != 0):
         try:
             user_ = User.objects.get(id=id)
@@ -118,7 +122,7 @@ def getposts(request,id):
         except User.DoesNotExist:
             return JsonResponse({"error": "User does not exist."}, status=400)
 
-    if(request.GET.get('following') == "true"):
+    elif(request.GET.get('following') == "true"):
         print(request.GET.get('following'))
         print(request.GET.get('following') == "true")
         user_ = User.objects.get(id=request.user.id)
